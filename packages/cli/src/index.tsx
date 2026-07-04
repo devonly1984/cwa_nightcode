@@ -1,24 +1,23 @@
 import { createCliRenderer,  } from "@opentui/core";
 import { createRoot } from "@opentui/react";
-import Header from "./components/layout/Header";
 
-import InputBar from "./components/bars/InputBar";
+import { ToastProvider } from "./components/providers/toast/ToastProvider";
+import { KeyboardLayerProvider } from "./components/providers/keyboard/KeyboardProvider";
+import { DialogProvider } from "./components/providers/dialog/DialogProvider";
+import ThemeProvider from "./components/providers/theme/ThemeProvider";
+import ThemeRoot from "./components/shared/ThemeRoot";
 
 const App = () => {
   return (
-    <box
-      alignItems="center"
-      justifyContent="center"
-      backgroundColor={"#0d0d12"}
-      width="100%"
-      height="100%"
-      gap={2}
-    >
-      <Header />
-      <box width={"100%"} maxWidth={78} paddingX={2}>
-        <InputBar onSubmit={() => {}} />
-      </box>
-    </box>
+    <ThemeProvider>
+      <KeyboardLayerProvider>
+        <DialogProvider>
+          <ToastProvider>
+            <ThemeRoot />
+          </ToastProvider>
+        </DialogProvider>
+      </KeyboardLayerProvider>
+    </ThemeProvider>
   );
 };
 
