@@ -1,5 +1,5 @@
 import { useRef, useState, useMemo, type RefObject } from "react";
-import { ScrollBoxRenderable } from "@opentui/core";
+import type { ScrollBoxRenderable } from "@opentui/core";
 import { useKeyboard } from "@opentui/react";
 import { getFilteredCommands } from "../lib/utils";
 import type { Command } from "../types";
@@ -28,10 +28,10 @@ export const useCommandMenu = (): UseCommandMenuReturn => {
     () => getFilteredCommands(commandQuery),
     [commandQuery],
   );
-const close = ()=>{
-  setShowCommandMenu(false);
-  pop("command");
-}
+  const close = () => {
+    setShowCommandMenu(false);
+    pop("command");
+  };
   const handleContentChange = (text: string) => {
     setTextValue(text);
     setSelectedIndex(0);
@@ -44,62 +44,55 @@ const close = ()=>{
     const prefix = text.startsWith("/") ? text.slice(1) : null;
     if (prefix !== null && !prefix.includes(" ")) {
       setShowCommandMenu(true);
-      push('command',()=>{
-    close();
-        return true
-      })
+      push("command", () => {
+        close();
+        return true;
+      });
     } else {
-      close()
+      close();
     }
   };
   const resolveCommand = (index: number): Command | undefined => {
     const command = filteredCommands[index];
     if (command) {
-    close();
+      close();
     }
     return command;
   };
-  useKeyboard((key)=>{
+  useKeyboard((key) => {
     if (!showCommandMenu || !isTopLayer("command")) return;
-    switch(key.name){
-        case "escape":
-        key.preventDefault();
-        close()
-        break;
-        case "up":
-            key.preventDefault();
-            setSelectedIndex((I:number)=>{
-                const newIndex = Math.max(0, I - 1);
-                const sb = scrollRef.current;
-                if (sb && newIndex<sb.scrollTop) {
-                    sb.scrollTo(newIndex);
-                }
-                return newIndex;
-            })
-            break;
-        case "down":
-                key.preventDefault();
-                setSelectedIndex((i:number)=>{
-                    if (filteredCommands.length===0) {
-                        return 0;
-                    }
-                    const newIndex = Math.min(filteredCommands.length - 1, i + 1);
-                    const sb = scrollRef.current;
-                    if (sb) {
-                        const viewPortHeight = sb.viewport.height;
-                        const visibleEnd = sb.scrollTop + viewPortHeight - 1;
-                        if (newIndex > visibleEnd) {
-                            sb.scrollTo(newIndex - viewPortHeight + 1)
-                        }
-                    }
-                    return newIndex;
-                })
-                break;
-                default:
-            break;
+    if (key.name === "escape") {
+      key.preventDefault();
+      close();
+    } else if (key.name === "up") {
+      key.preventDefault();
+      setSelectedIndex((I: number) => {
+        const newIndex = Math.max(0, I - 1);
+        const sb = scrollRef.current;
+        if (sb && newIndex < sb.scrollTop) {
+          sb.scrollTo(newIndex);
+        }
+        return newIndex;
+      });
+    } else if (key.name === "down") {
+      key.preventDefault();
+      setSelectedIndex((i: number) => {
+        if (filteredCommands.length === 0) {
+          return 0;
+        }
+        const newIndex = Math.min(filteredCommands.length - 1, i + 1);
+        const sb = scrollRef.current;
+        if (sb) {
+          const viewPortHeight = sb.viewport.height;
+          const visibleEnd = sb.scrollTop + viewPortHeight - 1;
+          if (newIndex > visibleEnd) {
+            sb.scrollTo(newIndex - viewPortHeight + 1);
+          }
+        }
+        return newIndex;
+      });
     }
-
-  })
+  });
   return {
     showCommandMenu,
     commandQuery,
@@ -107,6 +100,6 @@ const close = ()=>{
     scrollRef,
     handleContentChange,
     resolveCommand,
-      setSelectedIndex
-  }
+    setSelectedIndex,
+  };
 };

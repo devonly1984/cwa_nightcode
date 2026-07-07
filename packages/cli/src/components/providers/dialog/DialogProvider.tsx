@@ -24,7 +24,7 @@ interface DialogProviderProps {
   children: ReactNode;
 }
 
-export const DialogProvider = ({ children }: DialogProviderProps) => {
+ const DialogProvider = ({ children }: DialogProviderProps) => {
   const [currentDialog, setCurrentDialog] = useState<DialogConfig | null>(
     null,
   );
@@ -54,3 +54,4 @@ export const DialogProvider = ({ children }: DialogProviderProps) => {
     </DialogContext.Provider>
   );
 };
+export default DialogProvider;
