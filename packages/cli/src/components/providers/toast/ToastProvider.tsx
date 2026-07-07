@@ -22,7 +22,7 @@ export const useToast = (): ToastContextValue => {
   }
   return value;
 };
-export const ToastProvider = ({ children }: ToastProviderProps) => {
+ const ToastProvider = ({ children }: ToastProviderProps) => {
   const [currentToast, setCurrentToast] = useState<ToastOptions | null>(
     null,
   );
@@ -58,3 +58,4 @@ export const ToastProvider = ({ children }: ToastProviderProps) => {
     </ToastContext.Provider>
   );
 };
+export default ToastProvider;

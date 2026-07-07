@@ -12,7 +12,7 @@ import type { KeyboardLayerContextValue, Responder } from "./types";
 const KeyboardLayerContext =
   createContext<KeyboardLayerContextValue | null>(null);
 
-export const KeyboardLayerProvider = ({
+ const KeyboardLayerProvider = ({
   children,
 }: {
   children: ReactNode;
@@ -81,3 +81,4 @@ export const useKeyboardLayer = ()=>{
     }
     return context;
 }
+export default KeyboardLayerProvider

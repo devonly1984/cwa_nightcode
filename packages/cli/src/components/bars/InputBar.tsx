@@ -64,7 +64,7 @@ const InputBar = ({ onSubmit, disabled = false }: InputBarProps) => {
       }
     },
 
-    [renderer, toast],
+    [renderer, toast, dialog],
   );
    const handleCommandExecute = useCallback(
      (index: number) => {
@@ -113,6 +113,7 @@ const InputBar = ({ onSubmit, disabled = false }: InputBarProps) => {
           vertical: "┃",
           bottomLeft: "┃",
         }}
+        width="100%"
       >
         <box
           position="relative"
@@ -120,7 +121,7 @@ const InputBar = ({ onSubmit, disabled = false }: InputBarProps) => {
           paddingX={2}
           paddingY={1}
           backgroundColor={colors.surface}
-          width={"100%"}
+          width="100%"
           gap={1}
         >
           {showCommandMenu && (
@@ -133,7 +134,7 @@ const InputBar = ({ onSubmit, disabled = false }: InputBarProps) => {
               zIndex={10}
             >
               <CommandMenu
-                query=""
+                query={commandQuery}
                 selectedIndex={selectedIndex}
                 scrollRef={scrollRef}
                 onSelect={setSelectedIndex}
