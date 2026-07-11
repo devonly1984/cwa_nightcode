@@ -4,17 +4,21 @@
   "type": "module",
   "private": true,
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@nightcode/server": "workspace:*",
+    "@types/react": "^19.2.17"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@nightcode/shared": "workspace:*",
     "@opentui/core": "^0.4.2",
     "@opentui/react": "^0.4.2",
-    "@types/react": "^19.2.17",
+    "hono": "^4.12.28",
     "opentui-spinner": "^0.0.7",
     "react": "^19.2.6",
-    "react-router": "^8.1.0"
+    "react-router": "^8.1.0",
+    "zod": "^4.4.3"
   }
 }

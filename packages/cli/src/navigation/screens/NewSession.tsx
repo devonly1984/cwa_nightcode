@@ -1,32 +1,81 @@
-import { useEffect } from "react";
-import { useNavigate,useLocation } from "react-router";
-import {
-  ErrorMessage,
-  UserMessage,
-  BotMessage,
-} from "../../components/message";
+import { useEffect, useMemo, useRef } from "react";
+import { useNavigate, useLocation } from "react-router";
+import { DEFAULT_CHAT_MODEL_ID } from "@nightcode/shared";
+import { UserMessage } from "../../components/message";
+import { useToast } from "../../components/providers/toast/ToastProvider";
+import { apiClient } from "../../lib/apiClient";
+import { getErrorMessage } from "../../lib/httpErrors";
 import SessionShell from "../../components/session/SessionShell";
+import { newSessionStateSchema } from "../../lib/schemas/newSessionStateSchema";
 const NewSession = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const toast = useToast();
+  const hasStartedRef = useRef(false);
 
-    const state = location.state as {message?:string}|null;
-    useEffect(()=>{
-        if (!state?.message) {
-            navigate("/",{replace:true})
+  const state = useMemo(() => {
+    const parsed = newSessionStateSchema.safeParse(location.state);
+    return parsed.success ? parsed.data : null;
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!state) {
+      navigate("/", { replace: true });
+    }
+    if (!state?.message) {
+      navigate("/", { replace: true });
+    }
+  }, [state, navigate]);
+  useEffect(() => {
+    if (!state || hasStartedRef.current) return;
+    hasStartedRef.current = true;
+    let ignore = false;
+    const createSession = async () => {
+      try {
+        const res = await apiClient.sessions.$post({
+          json: {
+            title: state.message.slice(0, 100),
+            cwd: process.cwd(),
+            initialMessage: {
+              role: "USER",
+              content: state.message,
+              mode: "BUILD",
+              model: DEFAULT_CHAT_MODEL_ID,
+            },
+          },
+        });
+
+        if (ignore) return;
+        if (!res.ok) {
+          throw new Error(await getErrorMessage(res));
         }
-    },[state,navigate])
-
-    if (!state?.message) return null;
+        const session = await res.json();
+        navigate(`/sessions/${session.id}`, {
+          replace: true,
+          state: { session },
+        });
+      } catch (error) {
+        if (ignore) return;
+        toast.show({
+          variant: "error",
+          message:
+            error instanceof Error
+              ? error.message
+              : "Failed to create message",
+        });
+        navigate("/", { replace: true });
+      }
+    };
+    createSession();
+    return () => {
+      ignore = true;
+    };
+  }, [state, navigate, toast]);
+  if (!state) return null;
 
   return (
     <SessionShell onSubmit={() => {}} inputDisabled loading>
       <UserMessage message={state.message} />
-      <BotMessage
-        content="This is a sample bot response to demonstrate the message layout."
-        model="opus-4-6"
-      />
-      <ErrorMessage message="This is a sample error message." />
     </SessionShell>
   );
 };
