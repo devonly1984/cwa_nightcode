@@ -5,6 +5,7 @@ import {
   useState,
   useCallback,
   type ReactNode,
+  useMemo,
 } from "react";
 
 import type { ToastContextValue, ToastOptions } from "../toast/types";
@@ -48,9 +49,7 @@ export const useToast = (): ToastContextValue => {
     },
     [clearCurrentTimeout],
   );
-  const value: ToastContextValue = {
-    show,
-  };
+  const value: ToastContextValue = useMemo(() => ({ show }), [show]);
   return (
     <ToastContext.Provider value={value}>
       {children}
