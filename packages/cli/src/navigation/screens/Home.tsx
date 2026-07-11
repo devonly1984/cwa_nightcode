@@ -6,7 +6,7 @@ import { useCallback } from "react";
 const Home = () => {
     const navigate = useNavigate()
     const handleSubmit = useCallback((text:string)=>{
-        navigate("/sessions/12345", { state: { message: text } });
+        navigate("/sessions/new", { state: { message: text } });
     },[])
   return (
     <box
