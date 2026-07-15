@@ -1,15 +1,47 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import sessions from "./routes/sessions"
+import { sentry } from '@sentry/hono/bun'
+import * as Sentry from '@sentry/hono/bun'
+import chat from './routes/chat'
 const app = new Hono();
-
+app.use(
+  sentry(app, {
+    dsn: "https://c7a268a8fdb92984890a4210c3b1fdab@o4506934398353408.ingest.us.sentry.io/4511716258938880",
+    tracesSampleRate: 1.0,
+    enableLogs: true,
+    sendDefaultPii: true
+  }),
+)
+app.get("/debug-sentry", () => {
+  // Send a log before throwing the error
+  Sentry.logger.info('User triggered test error', {
+    action: 'test_error_endpoint',
+  });
+  // Send a test metric before throwing the error
+  Sentry.metrics.count('test_counter', 1);
+  throw new Error("My first Sentry error!");
+})
 app.onError((error,c)=>{
 if (error instanceof HTTPException) {
-    return c.json({ error: error.message || "Request failed" }, error.status)
+    Sentry.logger.warn("Handled HTTP error",{
+      status: error.status,
+      message: error.message||"Request failed",
+      path: c.req.path,
+      method: c.req.method
+    })
+     return c.json({ error: error.message || "Request Failed" }, error.status);
 }
-
-    return c.json({ error: "Internal Server Error" }, 500)
+Sentry.logger.error("Unhandled server error",{
+  path: c.req.path,
+  method: c.req.method,
+  message: error instanceof Error ? error.message : "Unknown error"
 })
-const routes = app.route("/sessions", sessions);
+  return c.json({ error: "Internal server error" }, 500);
+ 
+})
+const routes = app
+.route("/sessions", sessions)
+  .route("/chat", chat)
 export type AppType = typeof routes;
 export default {port:3000,fetch: app.fetch,idleTimeout:255}

@@ -1,8 +1,7 @@
 import { Hono } from "hono";
-
-import { createSessionValidator } from "../schemas";
+import { createSessionValidator } from "../schemas/sessionStream";
 import { MessageStatus, prisma } from "@nightcode/database";
-
+import * as Sentry from "@sentry/hono/bun";
 const app = new Hono()
   .get("/", async (c) => {
     const sessions = await prisma.session.findMany({
@@ -13,17 +12,12 @@ const app = new Hono()
         createdAt: true,
       },
     });
+    Sentry.logger.info("Listed sessions", {
+      count: sessions.length,
+    });
     return c.json(sessions);
   })
   .get("/:id", async (c) => {
-    //MOCK
-    //await new Promise((r) => setTimeout(r, 5000));
-
-    /*throw new HTTPException(
-        500,{
-            message: "Mock error: session loading failed"
-        }
-    )*/
     const id = c.req.param("id");
     const session = await prisma.session.findUnique({
       where: { id },
@@ -33,10 +27,19 @@ const app = new Hono()
     });
 
     if (!session) {
+      Sentry.logger.warn("Session not found", {
+        sessionId: id,
+        userId: "mock-user"
+      });
       return c.json({ error: "Session not found" }, 404);
     }
+    Sentry.logger.info("Loaded session",{
+      sessionID: session.id,
+      messageCount: session.messages.length
+    })
     return c.json(session);
   })
+
   .post("/", createSessionValidator, async (c) => {
     const { initialMessage, ...data } = c.req.valid("json");
     const session = await prisma.session.create({
@@ -54,6 +57,11 @@ const app = new Hono()
       },
       include: { messages: true },
     });
+    Sentry.logger.info("Created session",{
+      sessionId: session.id,
+      title: session.title,
+
+    })
     return c.json(session, 201);
   });
 
