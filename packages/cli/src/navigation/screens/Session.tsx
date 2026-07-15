@@ -6,7 +6,8 @@ import { getErrorMessage } from "../../lib/httpErrors";
 import SessionShell from "../../components/session/SessionShell";
 import { sessionLocationSchema } from "../../lib/schemas/sessionLocationSchema";
 import type { SessionData } from "../../types";
-import ChatMessage from "../../components/message/ChatMessage";
+import { SessionChat } from "../../components/shared/SessionChat";
+
 
 const Session = () => {
   const { id } = useParams();
@@ -55,12 +56,6 @@ const Session = () => {
   if (!session) {
     return <SessionShell onSubmit={() => {}} inputDisabled loading />;
   }
-  return (
-    <SessionShell onSubmit={() => {}} inputDisabled>
-      {session.messages.map((msg) => (
-        <ChatMessage key={msg.id} msg={msg} />
-      ))}
-    </SessionShell>
-  );
+  return <SessionChat key={session.id} session={session} />;
 };
 export default Session;

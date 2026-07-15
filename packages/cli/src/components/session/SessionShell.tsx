@@ -7,12 +7,14 @@ interface Props {
   onSubmit: (text: string) => void;
   inputDisabled?: boolean;
   loading?: boolean;
+  interruptible?: boolean;
 }
 const SessionShell = ({
   children,
   onSubmit,
   inputDisabled = false,
   loading = false,
+  interruptible = false,
 }: Props) => {
   return (
     <box
@@ -45,7 +47,12 @@ const SessionShell = ({
         paddingLeft={1}
       >
         <box flexDirection="row" alignItems="center" gap={2}>
-          {loading ? <Spinner /> : null}
+          {loading ? (
+            <>
+              <Spinner />
+              {interruptible ? <text>esc to interrupt</text> : null}
+            </>
+          ) : null}
         </box>
         <box
           flexDirection="row"
