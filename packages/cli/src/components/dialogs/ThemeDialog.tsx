@@ -5,7 +5,7 @@ import { useTheme
  import { DialogSearchList } from "../menus/DialogSearchList";
  import { THEMES,type  Theme  } from "../providers/theme/types";
  
-const ThemeDialog = () => {
+export const ThemeDialogContent = () => {
     const dialog = useDialog();
     const {setTheme,currentTheme} = useTheme();
     const originalThemeRef = useRef(currentTheme);
@@ -51,4 +51,4 @@ const ThemeDialog = () => {
     />
   );
 };
-export default ThemeDialog;
+

@@ -12,7 +12,7 @@ import type { Message } from "../types/chatTypes";
 import type { SupportedChatModelId } from "@nightcode/shared";
 import prettyMs from "pretty-ms";
 
-import { MessageStatus } from "@nightcode/database";
+import { MessageStatus, Mode } from "@nightcode/database";
 
 export const getFilteredCommands = (query: string): Command[] => {
   if (query.length === 0) return COMMANDS;
@@ -80,3 +80,7 @@ export const mapDbMessages = (
     };
   });
 };
+
+export const getModeLabel =(mode:Mode)=>{
+  return mode === Mode.PLAN ? "Plan" : "Build"
+}
