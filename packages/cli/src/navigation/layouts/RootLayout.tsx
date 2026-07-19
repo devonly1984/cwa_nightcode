@@ -4,6 +4,7 @@ import {
   ThemeProvider,
   DialogProvider,
   KeyboardLayerProvider,
+  PromptConfigProvider,
 } from "../../components/providers";
 import ThemeRoot from "./ThemeRoot";
 const RootLayout = () => {
@@ -12,9 +13,11 @@ const RootLayout = () => {
       <KeyboardLayerProvider>
         <DialogProvider>
           <ToastProvider>
-            <ThemeRoot>
-              <Outlet />
-            </ThemeRoot>
+            <PromptConfigProvider>
+              <ThemeRoot>
+                <Outlet />
+              </ThemeRoot>
+            </PromptConfigProvider>
           </ToastProvider>
         </DialogProvider>
       </KeyboardLayerProvider>

@@ -1,11 +1,17 @@
 import type { InferResponseType } from "hono";
 import type { apiClient } from "../lib/apiClient";
+import type { Mode } from "@nightcode/database";
+import type { SupportedChatModelId } from "@nightcode/shared";
 
 
 export type CommandContext = {
   exit: () => void;
   toast: ToastContextValue;
   dialog: DialogContextValue;
+  navigate: (path: string) => void;
+  mode: Mode;
+  setMode:(mode:Mode)=>void;
+  setModel: (model: SupportedChatModelId) => void;
 };
 
 export type Command = {

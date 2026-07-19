@@ -1,5 +1,5 @@
 import type {RefObject} from 'react';
-import { TextAttributes,type ScrollBoxRenderable } from '@opentui/core';
+import { TextAttributes, type ScrollBoxRenderable } from "@opentui/core";
 import { getFilteredCommands } from '../../lib/utils';
 import {
   MAX_VISIBLE_ITEMS,
