@@ -2,12 +2,19 @@ import Header from '../../components/layout/Header'
 import InputBar from '../../components/bars/InputBar'
 import { useNavigate } from 'react-router'
 import { useCallback } from "react";
-
+import { usePromptConfig } from '../../components/providers/prompt-config/PromptConfigProvider';
+import { TextAttributes } from "@opentui/core";
 const Home = () => {
     const navigate = useNavigate()
-    const handleSubmit = useCallback((text:string)=>{
-        navigate("/sessions/new", { state: { message: text } });
-    },[])
+    const { mode, model } = usePromptConfig();
+    const handleSubmit = useCallback(
+      (text: string) => {
+        navigate("/sessions/new", {
+          state: { message: text, mode, model },
+        });
+      },
+      [navigate, mode, model],
+    );
   return (
     <box
       alignItems="center"
@@ -19,10 +26,19 @@ const Home = () => {
       height="100%"
     >
       <Header />
-      <box width="100%" maxWidth={78} paddingX={2}>
+      <box
+        width="100%"
+        maxWidth={78}
+        paddingX={2}
+        flexDirection="column"
+        gap={1}
+      >
         <InputBar onSubmit={handleSubmit} />
+        <box flexDirection="row" gap={1} flexShrink={0} marginLeft="auto">
+          <text>tab</text>
+          <text attributes={TextAttributes.DIM}>Agents</text>
+        </box>
       </box>
-
     </box>
   );
 }

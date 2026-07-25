@@ -8,11 +8,11 @@ import {
 } from "../components/providers/theme/types";
 import { CONFIG_DIR, THEME_PREFERENCES_PATH } from "../constants/theme";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import type { Message } from "../types/chatTypes";
-import type { SupportedChatModelId } from "@nightcode/shared";
+import type { ClientMessagePart, ClientToolCallPart, Message, PartGroup } from "../types/chatTypes";
+import { messagePartsSchema, type SupportedChatModelId } from "@nightcode/shared";
 import prettyMs from "pretty-ms";
 
-import { MessageStatus, Mode } from "@nightcode/database";
+import { MessageStatus, Mode } from "@nightcode/database/enums";
 
 export const getFilteredCommands = (query: string): Command[] => {
   if (query.length === 0) return COMMANDS;
@@ -51,9 +51,9 @@ export const persistTheme = (theme: Theme) => {
 };
 
 export const mapDbMessages = (
-  DbMessages: SessionData["messages"],
+  dbMessages: SessionData["messages"],
 ): Message[] => {
-  return DbMessages.map((m): Message => {
+  return dbMessages.map((m): Message => {
     if (m.role === "ERROR") {
       return { id: m.id, role: "error", content: m.content };
     }
@@ -65,14 +65,19 @@ export const mapDbMessages = (
         mode: m.mode,
         model: m.model as SupportedChatModelId,
       };
+      
     }
+    const parsedParts = m.parts == null ? null : messagePartsSchema.safeParse(m.parts)
+    const parts: ClientMessagePart[] = parsedParts?.success ? parsedParts.data.map((p) => p.type === 'tool-call' ? { ...p, status: "done" as const } : p)
+      :[]
+
     return {
       id: m.id,
       role: "assistant",
       content: m.content,
       model: m.model as SupportedChatModelId,
       mode: m.mode,
-      parts: [{ type: "text", text: m.content }],
+      parts,
       ...(m.duration != null
         ? { duration: prettyMs(m.duration * 1000) }
         : {}),
@@ -83,4 +88,27 @@ export const mapDbMessages = (
 
 export const getModeLabel =(mode:Mode)=>{
   return mode === Mode.PLAN ? "Plan" : "Build"
+}
+export const formatToolName = (name:string):string=>{
+  return name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase())
+}
+export const formatToolArgs = (toolCall:ClientToolCallPart):string=>{
+  return Object.values(toolCall.args).map(String).join(" ")
+}
+
+export const groupConsecutiveParts = (parts:ClientMessagePart[]):PartGroup[]=>{
+  const groups:PartGroup[]=[];
+
+  for (let i=0;i<parts.length;i++){
+    const part = parts[i]!;
+    const lastGroup = groups[groups.length-1];
+    if (lastGroup && lastGroup.type===part?.type) {
+      lastGroup.parts.push(part)
+    } else {
+      const key = part.type === 'tool-call' ? `group-tc-${part.id}` : `group-${part.type}-${i}`
+      groups.push({ type: part.type, parts: [part], key })
+    }
+
+  }
+  return groups;
 }

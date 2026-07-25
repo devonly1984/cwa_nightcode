@@ -1,6 +1,6 @@
 import type { InferResponseType } from "hono";
 import type { apiClient } from "../lib/apiClient";
-import type { Mode } from "@nightcode/database";
+import type { Mode } from "@nightcode/database/enums";
 import type { SupportedChatModelId } from "@nightcode/shared";
 
 

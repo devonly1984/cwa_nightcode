@@ -1,4 +1,4 @@
-import { Mode } from "@nightcode/database";
+import { Mode } from "@nightcode/database/enums";
 import z from "zod";
 import { isSupportedChatModel } from "../lib/models";
 import { zValidator } from "@hono/zod-validator";

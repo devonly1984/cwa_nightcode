@@ -14,7 +14,7 @@ interface ChatMessageProps {
 }
 const ChatMessage = ({ msg }: ChatMessageProps) => {
     if (msg.role==="user") {
-        return <UserMessage message={msg.content} />;
+        return <UserMessage message={msg.content} mode={msg.mode} />;
     } 
     if (msg.role === "error") {
       return <ErrorMessage message={msg.content} />;

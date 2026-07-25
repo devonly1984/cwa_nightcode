@@ -2,7 +2,16 @@ import type { Mode } from "@nightcode/database/enums";
 import type { SupportedChatModelId } from "@nightcode/shared";
 import type { ClientResponse } from "hono/client";
 
-export type ClientMessagePart = { type: "text"; text: string };
+
+export type ClientToolCallPart = {
+    type: "tool-call",
+    id:string;
+    name:string;
+    args: Record<string,unknown>;
+    result?:string;
+    status: "calling" | "done"
+}
+export type ClientMessagePart = | { type: 'reasoning', text: string } | ClientToolCallPart | { type: 'text', text: string }
 export type Message =
   | {
       id: string;
@@ -47,4 +56,9 @@ export type RunStreamParams ={
     mode:Mode;
     model:SupportedChatModelId;
     request: (controller: AbortController) => Promise<ClientResponse<unknown>>
+}
+export type PartGroup = {
+    type: ClientMessagePart['type'];
+    parts: ClientMessagePart[];
+    key: string;
 }

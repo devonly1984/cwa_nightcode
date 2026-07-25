@@ -26,9 +26,11 @@ export const ModelsDialogContent = ({
         modelId.toLowerCase().includes(query.toLowerCase())
       }
       renderItem={(modelId, isSelected) => (
+        <>
         <text selectable={false} fg={isSelected ? "black" : "white"}>
           {modelId}
         </text>
+        </>
       )}
       getKey={(modelId) => modelId}
       placeholder="Search models"

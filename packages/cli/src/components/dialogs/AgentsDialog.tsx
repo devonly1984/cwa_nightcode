@@ -29,10 +29,12 @@ export const AgentsDialogContent = ({
         getModeLabel(item).toLowerCase().includes(query.toLowerCase())
       }
       renderItem={(item, isSelected) => (
-        <text selectable={false} fg={isSelected ? "black" : "white"}>
-          {item === currentMode ? " *" : " "}
-          {getModeLabel(item)}
-        </text>
+        <>
+          <text selectable={false} fg={isSelected ? "black" : "white"}>
+            {item === currentMode ? " *" : " "}
+            {getModeLabel(item)}
+          </text>
+        </>
       )}
       getKey={(item) => item}
       placeholder="Search agents"
