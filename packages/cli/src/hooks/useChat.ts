@@ -16,6 +16,7 @@ import type {
   ClientMessagePart,
   RunStreamParams,
   SubmitParams,
+    ClientToolCallPart
 } from "../types/chatTypes";
 
 
@@ -120,6 +121,36 @@ export const useChat = (sessionId: string, initialMessages: Message[]) => {
                 break;
             }
             switch(event.type) {
+                case "reasoning-delta":{
+                    const last = parts[parts.length-1];
+                    if (last && last.type==='reasoning') {
+                        last.text+=event.text
+                    } else {
+                        parts.push({type:'reasoning',text:event.text})
+                    }
+                    emitParts(activeStream.requestId, parts)
+                    break;
+                }
+                case 'tool-call': {
+                    parts.push({
+                        type:'tool-call',
+                        id: event.toolCallId,
+                        name: event.toolName,
+                        args: event.args,
+                        status: "calling"
+                    })
+                    emitParts(activeStream.requestId,parts)
+                    break;
+                }
+                case "tool-result":{
+                    const toolCall = parts.find((p): p is ClientToolCallPart => p.type === 'tool-call' && p.id === event.toolCallId)
+                    if (toolCall) {
+                        toolCall.result=event.result;
+                        toolCall.status='done'
+                    }
+                    emitParts(activeStream.requestId, parts)
+                    break;
+                }
                 case 'text-delta': {
                     const last = parts[parts.length-1];
                     if (last && last.type==='text') {

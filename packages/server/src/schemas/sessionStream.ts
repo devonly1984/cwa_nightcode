@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { Mode, Role, MessageStatus } from "@nightcode/database";
+import { Mode, Role } from "@nightcode/database/enums";
 import { findSupportedChatModel } from "@nightcode/shared";
 import z from "zod";
 import * as Sentry from "@sentry/hono/bun";

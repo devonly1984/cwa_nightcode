@@ -1,15 +1,17 @@
 import { useTheme } from "../providers/theme/ThemeProvider";
 import { EmptyBorder } from "../../constants/border";
+import { Mode } from "@nightcode/database";
 interface Props {
-  message:string;
+  message: string;
+  mode: Mode;
 }
-const UserMessage = ({ message }: Props) => {
+const UserMessage = ({ message,mode }: Props) => {
   const { colors } = useTheme();
   return (
     <box width={"100%"} alignItems="center">
       <box
         border={["left"]}
-        borderColor={colors.primary}
+        borderColor={mode === Mode.PLAN ? colors.planMode : colors.primary}
         width={"100%"}
         customBorderChars={{
           ...EmptyBorder,
@@ -24,7 +26,7 @@ const UserMessage = ({ message }: Props) => {
           borderColor={colors.surface}
           width={"100%"}
         >
-          <text >{message}</text>
+          <text>{message}</text>
         </box>
       </box>
     </box>

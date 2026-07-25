@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { createSessionValidator } from "../schemas/sessionStream";
-import { MessageStatus, prisma } from "@nightcode/database";
+import {  prisma } from "@nightcode/database/client";
+import { MessageStatus } from "@nightcode/database/enums";
 import * as Sentry from "@sentry/hono/bun";
 const app = new Hono()
   .get("/", async (c) => {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router";
-import { DEFAULT_CHAT_MODEL_ID } from "@nightcode/shared";
+
 import { UserMessage } from "../../components/message";
 import { useToast } from "../../components/providers/toast/ToastProvider";
 import { apiClient } from "../../lib/apiClient";
@@ -39,8 +39,8 @@ const NewSession = () => {
             initialMessage: {
               role: "USER",
               content: state.message,
-              mode: "BUILD",
-              model: DEFAULT_CHAT_MODEL_ID,
+              mode: state.mode,
+              model: state.model,
             },
           },
         });
@@ -75,7 +75,7 @@ const NewSession = () => {
 
   return (
     <SessionShell onSubmit={() => {}} inputDisabled loading>
-      <UserMessage message={state.message} />
+      <UserMessage message={state.message} mode={state.mode} />
     </SessionShell>
   );
 };

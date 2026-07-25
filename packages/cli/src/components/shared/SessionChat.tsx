@@ -3,10 +3,11 @@ import SessionShell from "../session/SessionShell";
 import { useChat } from "../../hooks/useChat";
 import { mapDbMessages } from "../../lib/utils";
 import type { SessionData } from "../../types";
-import { DEFAULT_CHAT_MODEL_ID } from "@nightcode/shared";
+
 import { BotMessage, ChatMessage } from "../message";
 import { useKeyboardLayer } from "../providers/keyboard/KeyboardProvider";
 import { useKeyboard } from "@opentui/react";
+import { usePromptConfig } from "../providers/prompt-config/PromptConfigProvider";
 export const SessionChat = ({ session }: { session: SessionData }) => {
   const [initialMessages] = useState(() =>
     mapDbMessages(session.messages),
@@ -15,6 +16,7 @@ export const SessionChat = ({ session }: { session: SessionData }) => {
     session.id,
     initialMessages,
   );
+  const { mode, model } = usePromptConfig();
   const { isTopLayer } = useKeyboardLayer();
   useEffect(() => {
     return () => abort();
@@ -34,8 +36,8 @@ export const SessionChat = ({ session }: { session: SessionData }) => {
       onSubmit={(text) =>
         submit({
           userText: text,
-          mode: "BUILD",
-          model: DEFAULT_CHAT_MODEL_ID,
+          mode,
+          model,
         })
       }
       loading={streaming.status === "streaming"}

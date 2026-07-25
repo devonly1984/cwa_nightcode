@@ -1,6 +1,6 @@
 import {anthropic} from '@ai-sdk/anthropic'
 import {openai} from '@ai-sdk/openai'
-import type { AnthropicModelId, OpenAIModelId, ResolvedModel } from '../types';
+import { ANTHROPIC_PROVIDER_OPTIONS, OPENAI_PROVIDER_OPTIONS, type AnthropicModelId, type OpenAIModelId, type ResolvedModel } from '../types';
 import { findSupportedChatModel, type SupportedChatModel,type SupportedChatModelId } from '@nightcode/shared';
 
  const assertUnspportedProvider=(provider:never):never=>{
@@ -12,7 +12,8 @@ const resolveAnthropicModel = (modelId:AnthropicModelId):ResolvedModel=>{
     return {
         model: anthropic(modelId),
         provider: 'anthropic',
-        modelId
+        modelId,
+        providerOptions: ANTHROPIC_PROVIDER_OPTIONS[modelId]
     }
 }
 
@@ -20,7 +21,8 @@ const resolveOpenIModel = (modelId:OpenAIModelId):ResolvedModel=>{
     return {
         model: openai(modelId),
         provider: "openai",
-        modelId
+        modelId,
+        providerOptions: OPENAI_PROVIDER_OPTIONS[modelId]
     }
 }
 const resolveSuportedChatModel = (model:SupportedChatModel):ResolvedModel=>{

@@ -10,7 +10,7 @@ type DialogSearchListProps<T> = {
   items: T[];
   onSelect: (item: T) => void;
   onHighlight?: (item: T) => void;
-  filterFn: (item: T, query: string) => ReactNode;
+  filterFn: (item: T, query: string) => boolean;
   renderItem: (item: T, isSelected: boolean) => ReactNode;
   getKey: (item: T) => string;
   placeholder?: string;
@@ -93,7 +93,9 @@ type DialogSearchListProps<T> = {
          onContentChange={handleContentChange}
        />
        {filtered.length === 0 ? (
+        <>
          <text attributes={TextAttributes.DIM}>{emptyText}</text>
+         </>
        ) : (
          <scrollbox ref={scrollRef} height={visibleHeight}>
            {filtered.map((item, index) => {

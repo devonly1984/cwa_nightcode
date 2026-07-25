@@ -72,8 +72,7 @@ export const SessionsDialogContent = () => {
       }
       renderItem={(session, isSelected) => (
         <>
-          {" "}
-          <text selectable={false} fg={isSelected ? "black" : "white"}>
+        <text selectable={false} fg={isSelected ? "black" : "white"}>
             {session.title}
           </text>
           <box flexGrow={1} />

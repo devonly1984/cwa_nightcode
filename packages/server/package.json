@@ -10,10 +10,13 @@
     "build": "bun build src/index.ts --outdir dist --target bun",
     "postinstall": "bun run --cwd ../database db:generate"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/bun": "^1.3.14"
+  },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.12",
-    "@ai-sdk/openai": "^4.0.11",
+    "@ai-sdk/anthropic": "^4.0.16",
+    "@ai-sdk/openai": "^4.0.16",
+    "@ai-sdk/provider-utils": "^5.0.11",
     "@hono/zod-validator": "^0.8.0",
     "@nightcode/database": "workspace:*",
     "@nightcode/shared": "workspace:*",
