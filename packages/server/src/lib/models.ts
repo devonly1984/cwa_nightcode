@@ -1,6 +1,6 @@
 import {anthropic} from '@ai-sdk/anthropic'
 import {openai} from '@ai-sdk/openai'
-import { ANTHROPIC_PROVIDER_OPTIONS, OPENAI_PROVIDER_OPTIONS, type AnthropicModelId, type OpenAIModelId, type ResolvedModel } from '../types';
+import { ANTHROPIC_PROVIDER_OPTIONS, OPENAI_PROVIDER_OPTIONS, type AnthropicModelId, type OpenAIModelId, type ResolvedModel } from "../types";
 import { findSupportedChatModel, type SupportedChatModel,type SupportedChatModelId } from '@nightcode/shared';
 
  const assertUnspportedProvider=(provider:never):never=>{

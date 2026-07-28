@@ -11,12 +11,14 @@ import {
 import { streamSSE } from "hono/streaming";
 import { type ChatStreamEvent } from "@nightcode/shared";
 import { isSupportedChatModel } from "../lib/models";
+import type { AuthenticatedEnv } from "../middleware/requireAuth";
 
-const app = new Hono()
+const app = new Hono<AuthenticatedEnv>()
   .post("/:sessionId/resume", async (c) => {
     const sessionId = c.req.param("sessionId");
+    const userId = c.get("userId")
     const session = await prisma.session.findUnique({
-      where: { id: sessionId },
+      where: { id: sessionId, userId },
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
     if (!session) {
@@ -83,8 +85,9 @@ const app = new Hono()
   })
   .post("/:sessionId", submitValidator, async (c) => {
     const sessionId = c.req.param("sessionId");
+    const userId = c.get("userId")
     const session = await prisma.session.findUnique({
-      where: { id: sessionId },
+      where: { id: sessionId, userId },
       include: { messages: { orderBy: { createdAt: "asc" } } },
     });
     if (!session) {

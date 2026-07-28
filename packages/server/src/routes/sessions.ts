@@ -3,9 +3,13 @@ import { createSessionValidator } from "../schemas/sessionStream";
 import {  prisma } from "@nightcode/database/client";
 import { MessageStatus } from "@nightcode/database/enums";
 import * as Sentry from "@sentry/hono/bun";
-const app = new Hono()
+import type { AuthenticatedEnv } from "../middleware/requireAuth";
+
+const app = new Hono<AuthenticatedEnv>()
   .get("/", async (c) => {
+    const userId = c.get("userId")
     const sessions = await prisma.session.findMany({
+      where: { userId },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -20,8 +24,9 @@ const app = new Hono()
   })
   .get("/:id", async (c) => {
     const id = c.req.param("id");
+    const userId = c.get('userId')
     const session = await prisma.session.findUnique({
-      where: { id },
+      where: { id, userId },
       include: {
         messages: { orderBy: { createdAt: "asc" } },
       },
@@ -43,10 +48,11 @@ const app = new Hono()
 
   .post("/", createSessionValidator, async (c) => {
     const { initialMessage, ...data } = c.req.valid("json");
+    const userId = c.get("userId")
     const session = await prisma.session.create({
       data: {
         ...data,
-        userId: "mock-user",
+        userId,
         ...(initialMessage && {
           messages: {
             create: {

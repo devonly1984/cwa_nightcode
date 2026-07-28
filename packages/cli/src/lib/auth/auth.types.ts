@@ -3,6 +3,6 @@ export type AuthData = {
 }
 
 export type OAuthState = {
-    none:string;
+    nonce:string;
     port:number;
 }
