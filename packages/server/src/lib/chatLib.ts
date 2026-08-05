@@ -7,11 +7,14 @@ import {
   type MessagePart,
 } from "@nightcode/shared";
 import { resolveChatModel } from "./models";
-import type { StreamParams } from "../types";
+import type { IngestUsageFormMessageParams, StreamParams } from "../types";
 import type { streamSSE } from "hono/streaming";
 import { streamText as aiStreamText,stepCountIs } from "ai";
 import { createTools } from "../tools";
 import { buildSystemPrompt } from "../prompts/SystemPrompt";
+import type { LanguageModelUsage } from "ai"
+import {calculateCreditsForUsage} from '../lib/polar/credits';
+import { ingestAiUsage } from "./polar/polar";
 export const activeResumeSessionIds = new Set<string>();
 
 export const getResumableUserMessage = (
@@ -51,11 +54,13 @@ export const streamAiResponse = async (
   stream: Parameters<Parameters<typeof streamSSE>[1]>[0],
   params: StreamParams,
 ) => {
-  const { sessionId, model, cwd, history, mode, abortController } = params;
+  const { sessionId, userId, model, cwd, history, mode, abortController } = params;
   const startTime = Date.now();
   const tools = cwd ? createTools(cwd, mode) : undefined
   const parts: MessagePart[] = [];
   const resolvedModel = resolveChatModel(model);
+  let completedUsage: LanguageModelUsage | null = null;
+
 
   const persistInterruptedMesage = async () => {
     const fullText = parts
@@ -68,7 +73,7 @@ export const streamAiResponse = async (
     const elapsedms = Date.now() - startTime;
     const validatedParts: Prisma.InputJsonValue | undefined =
       parts.length > 0 ? messagePartSchema.parse(parts) : undefined;
-    await prisma.message.create({
+    return prisma.message.create({
       data: {
         sessionId,
         role: "ASSISTANT",
@@ -81,6 +86,43 @@ export const streamAiResponse = async (
       },
     });
   };
+
+  const ingestUsageForMessage = async ({ messageId, status }: IngestUsageFormMessageParams) => {
+    if(!completedUsage){
+      return;
+    }
+    try {
+      const billableUsage = calculateCreditsForUsage({
+        provider: resolvedModel.provider,
+        model: resolvedModel.modelId,
+        usage: completedUsage
+      })
+      await ingestAiUsage({
+        externalCustomerId: userId,
+     eventId: `chat-message:${messageId}`,
+     credits: billableUsage.credits
+      })
+    }
+    catch (error) {
+      console.error("Failed to ingest Polar Ai usage for chat message",{
+        error,
+        sessionId,
+        messageId,
+        userId
+      })
+
+    }
+  }
+  const persistInterruptedMessageAndUsage = async()=>{
+    const interruptedMessage = await persistInterruptedMesage();
+    if (!interruptedMessage) {
+      return;
+    }
+    await ingestUsageForMessage({
+      messageId: interruptedMessage.id,
+      status: 'interrupted'
+    })
+  }
   try {
     const result = aiStreamText({
       model: resolvedModel.model,
@@ -90,6 +132,10 @@ export const streamAiResponse = async (
       stopWhen: tools ? stepCountIs(50) : undefined,
       abortSignal: abortController.signal,
       providerOptions: resolvedModel.providerOptions,
+      onFinish(event){
+        completedUsage = event.usage;
+
+      }
     });
     for await (const part of result.stream) {
       if (stream.aborted) break;
@@ -172,7 +218,7 @@ export const streamAiResponse = async (
       }
     }
     if (stream.aborted || abortController.signal.aborted) {
-      await persistInterruptedMesage();
+      await persistInterruptedMessageAndUsage();
       return;
     }
     const elapsedMs = Date.now() - startTime;
@@ -195,6 +241,10 @@ export const streamAiResponse = async (
         duration: Math.round(elapsedMs / 1000),
       },
     });
+    await ingestUsageForMessage({
+      messageId: assistantMessage.id,
+      status: 'complete'
+    })
     const event: ChatStreamEvent = {
       type: "done",
       messageId: assistantMessage.id,
@@ -206,7 +256,7 @@ export const streamAiResponse = async (
     });
   } catch (error) {
     if (abortController.signal.aborted) {
-      await persistInterruptedMesage();
+      await persistInterruptedMessageAndUsage();
       return;
     }
     const message = error instanceof Error ? error.message : String(error);

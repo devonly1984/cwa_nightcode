@@ -1,6 +1,8 @@
 import { createClerkClient } from '@clerk/backend'
 
-if (!process.env.CLERK_SECREY_KEY) {
+
+
+if (!process.env.CLERK_SECRET_KEY) {
     throw new Error("CLERK_SECRET_KEY environment variable is required")
 }
 if (!process.env.CLERK_PUBLISHABLE_KEY) {
