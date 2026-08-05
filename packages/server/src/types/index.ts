@@ -45,9 +45,14 @@ export const OPENAI_PROVIDER_OPTIONS:Partial<Record<OpenAIModelId,ProviderOption
 
 export type StreamParams = {
     sessionId:string;
+    userId: string;
     model:string;
     cwd: string | null;
     history: { role: "user" | "assistant"; content: string }[];
     mode: Mode;
     abortController: AbortController
+}
+export type IngestUsageFormMessageParams ={
+    messageId:string;
+    status: "complete" | "interrupted";
 }

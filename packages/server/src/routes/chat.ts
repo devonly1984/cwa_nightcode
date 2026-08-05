@@ -12,6 +12,10 @@ import { streamSSE } from "hono/streaming";
 import { type ChatStreamEvent } from "@nightcode/shared";
 import { isSupportedChatModel } from "../lib/models";
 import type { AuthenticatedEnv } from "../middleware/requireAuth";
+import { requiredCreditsBalance } from '../middleware/requireCeditsBalance'
+
+
+
 
 const app = new Hono<AuthenticatedEnv>()
   .post("/:sessionId/resume", async (c) => {
@@ -58,6 +62,7 @@ const app = new Hono<AuthenticatedEnv>()
           try {
             await streamAiResponse(stream, {
               sessionId,
+              userId,
               model: resumeableMessage.model,
               cwd: session.cwd,
               history,
@@ -83,7 +88,7 @@ const app = new Hono<AuthenticatedEnv>()
       throw error;
     }
   })
-  .post("/:sessionId", submitValidator, async (c) => {
+  .post("/:sessionId", requiredCreditsBalance, submitValidator, async (c) => {
     const sessionId = c.req.param("sessionId");
     const userId = c.get("userId")
     const session = await prisma.session.findUnique({
@@ -121,6 +126,7 @@ const app = new Hono<AuthenticatedEnv>()
         });
         await streamAiResponse(stream, {
           sessionId,
+          userId,
           model: data.model,
           cwd: session.cwd,
           history,

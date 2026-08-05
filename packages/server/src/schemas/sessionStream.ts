@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { Mode, Role } from "@nightcode/database/enums";
-import { findSupportedChatModel } from "@nightcode/shared";
+import { isSupportedChatModel } from "../lib/models";
 import z from "zod";
 import * as Sentry from "@sentry/hono/bun";
 export const createSessionSchema = z.object({
@@ -13,7 +13,7 @@ export const createSessionSchema = z.object({
       mode: z.enum(Mode),
       model: z
         .string()
-        .refine((id) => !!findSupportedChatModel(id), "Unsupported model"),
+        .refine((id) => !!isSupportedChatModel, "Unsupported model"),
     })
     .optional(),
 });

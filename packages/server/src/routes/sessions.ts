@@ -4,6 +4,9 @@ import {  prisma } from "@nightcode/database/client";
 import { MessageStatus } from "@nightcode/database/enums";
 import * as Sentry from "@sentry/hono/bun";
 import type { AuthenticatedEnv } from "../middleware/requireAuth";
+import { requiredCreditsBalance } from '../middleware/requireCeditsBalance'
+
+
 
 const app = new Hono<AuthenticatedEnv>()
   .get("/", async (c) => {
@@ -46,7 +49,7 @@ const app = new Hono<AuthenticatedEnv>()
     return c.json(session);
   })
 
-  .post("/", createSessionValidator, async (c) => {
+  .post("/", requiredCreditsBalance, createSessionValidator, async (c) => {
     const { initialMessage, ...data } = c.req.valid("json");
     const userId = c.get("userId")
     const session = await prisma.session.create({

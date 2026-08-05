@@ -1,5 +1,6 @@
 import { Hono } from "hono";
-const app = new Hono().get("/callback",(c)=>{
+const app = new Hono().
+    get("/callback", (c) => {
 const code = c.req.query("code");
 const state = c.req.query("state");
     const error = c.req.query("error")
