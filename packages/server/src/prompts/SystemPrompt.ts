@@ -1,11 +1,11 @@
-import type { Mode } from "@nightcode/database/enums";
+import type { ModeType } from "@nightcode/shared";
 
 type SystemPromptParams = {
-    cwd:string|null;
-    mode: Mode;
+   
+  mode: ModeType;
 }
 
-export const buildSystemPrompt = ({ cwd, mode }: SystemPromptParams):string => {
+export const buildSystemPrompt = ({ mode }: SystemPromptParams): string => {
     const parts:string[]=[];
     parts.push(`You are an expert software engineer working as a coding assistant inside a terminal application.
 
@@ -13,9 +13,7 @@ export const buildSystemPrompt = ({ cwd, mode }: SystemPromptParams):string => {
   - **PLAN** — Read-only analysis and planning. No file modifications.
   - **BUILD** — Full implementation with read and write tools.`);
 
-  if (cwd) {
-      parts.push(`\nThe user's project directory is: ${cwd}`)
-  }
+ 
   if (mode==='PLAN') {
         parts.push(`
     ## Mode: PLAN
@@ -33,7 +31,7 @@ export const buildSystemPrompt = ({ cwd, mode }: SystemPromptParams):string => {
     - After making changes, verify the work when possible`);
   }
 
-    if (cwd && mode === 'PLAN') {
+    if ( mode === 'PLAN') {
        parts.push(`
     ## Tool Usage
     You have these tools available:
@@ -48,7 +46,7 @@ export const buildSystemPrompt = ({ cwd, mode }: SystemPromptParams):string => {
     3. **Batch your tool calls.** Call multiple tools in parallel when possible (e.g. read 5 files at once, not one at a time).`);
   }
 
-  if (cwd && mode==='BUILD') {
+  if (mode === 'BUILD') {
      parts.push(`
     ## Tool Usage
     You have these tools available:

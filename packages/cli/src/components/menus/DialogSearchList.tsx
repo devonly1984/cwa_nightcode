@@ -32,6 +32,7 @@ type DialogSearchListProps<T> = {
    const scrollRef = useRef<ScrollBoxRenderable>(null);
    const { isTopLayer } = useKeyboardLayer();
    const {colors}=useTheme()
+
    const handleContentChange = useCallback(() => {
      const text = inputRef.current?.value ?? "";
      setSearchValue(text);
@@ -41,6 +42,7 @@ type DialogSearchListProps<T> = {
        scrollbox.scrollTo(0);
      }
    }, []);
+
    const filtered = searchValue
      ? items.filter((item) => filterFn(item, searchValue))
      : items;
@@ -93,9 +95,7 @@ type DialogSearchListProps<T> = {
          onContentChange={handleContentChange}
        />
        {filtered.length === 0 ? (
-        <>
          <text attributes={TextAttributes.DIM}>{emptyText}</text>
-         </>
        ) : (
          <scrollbox ref={scrollRef} height={visibleHeight}>
            {filtered.map((item, index) => {

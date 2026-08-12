@@ -1,8 +1,8 @@
-import type { SupportedChatModelId } from "@nightcode/shared";
+import type {ModeType, SupportedChatModelId } from "@nightcode/shared";
 
 export type AgentsDialogProps ={
-  currentMode:Mode;
-  onSelectMode: (mode: Mode) => void;
+  currentMode:ModeType;
+  onSelectMode: (mode: ModeType) => void;
 }
 export type ModelsDialogProps ={
  models:SupportedChatModelId[]

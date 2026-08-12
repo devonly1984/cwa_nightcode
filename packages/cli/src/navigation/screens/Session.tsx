@@ -16,11 +16,15 @@ const Session = () => {
   const toast = useToast();
   const prefetch = useMemo(() => {
     const parsed = sessionLocationSchema.safeParse(location.state);
-    return parsed.success ? parsed.data.session : null;
+    return parsed.success ? parsed.data : null;
   }, [location.state]);
-  const [session, setSession] = useState<SessionData | null>(prefetch);
+  const [session, setSession] = useState<SessionData | null>(
+    prefetch?.session ?? null,
+  );
   useEffect(() => {
-    if (prefetch) return;
+    if (prefetch?.session) {
+      return;
+    }
     setSession(null);
     if (!id) return;
     let ignore = false;
@@ -56,6 +60,12 @@ const Session = () => {
   if (!session) {
     return <SessionShell onSubmit={() => {}} inputDisabled loading />;
   }
-  return <SessionChat key={session.id} session={session} />;
+  return (
+    <SessionChat
+      key={session.id}
+      session={session}
+      initialPrompt={prefetch?.initialPrompt}
+    />
+  );
 };
 export default Session;

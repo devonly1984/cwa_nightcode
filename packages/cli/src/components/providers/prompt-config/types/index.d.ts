@@ -1,11 +1,11 @@
-import type { Mode } from "@nightcode/database/enums"
+import  { type ModeType } from "@nightcode/shared"
 import type { SupportedChatModelId } from "@nightcode/shared";
 
 
 export type PromptConfigContextValue = {
-    mode:Mode
+    mode:ModeType;
     toggleMode:()=>void;
-    setMode:(mode:Mode)=>void;
+    setMode: (mode: ModeType) => void;
     model: SupportedChatModelId;
     setModel: (model: SupportedChatModelId) => void;
 }

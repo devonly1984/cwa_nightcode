@@ -1,3 +1,3 @@
-import { Mode } from "@nightcode/database";
+import {Mode,type  ModeType } from "@nightcode/shared";
 
-export const AVAILABLE_MODES: Mode[] = [Mode.BUILD, Mode.PLAN]
+export const AVAILABLE_MODES: ModeType[] = [Mode.BUILD, Mode.PLAN]

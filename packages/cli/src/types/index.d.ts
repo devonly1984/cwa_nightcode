@@ -1,7 +1,8 @@
 import type { InferResponseType } from "hono";
 import type { apiClient } from "../lib/apiClient";
-import type { Mode } from "@nightcode/database/enums";
-import type { SupportedChatModelId } from "@nightcode/shared";
+
+import type { ModeType, SupportedChatModelId, ToolContracts } from "@nightcode/shared";
+import type { InferUITools, UIMessage } from "ai";
 
 
 export type CommandContext = {
@@ -9,8 +10,8 @@ export type CommandContext = {
   toast: ToastContextValue;
   dialog: DialogContextValue;
   navigate: (path: string) => void;
-  mode: Mode;
-  setMode:(mode:Mode)=>void;
+  mode: ModeType;
+  setMode:(mode:ModeType)=>void;
   setModel: (model: SupportedChatModelId) => void;
 };
 
@@ -30,3 +31,16 @@ export type SessionData = InferResponseType<
   (typeof apiClient.sessions)[":id"]["$get"],
   200
 >;
+export type ChatMessageMetadata = {
+  mode?:ModeType;
+  model?:SupportedChatModelId;
+  durationMs?:number;
+  usage?: LanguageModelUsage;
+}
+export type ChatTools = {
+  [Name in keyof InferUITools<ToolContracts>]: {
+    input: InferUITools<ToolContracts>[Name]['input'];
+  output: unknown;
+  }
+}
+export type Message = UIMessage<ChatMessageMetadata, never, ChatTools>

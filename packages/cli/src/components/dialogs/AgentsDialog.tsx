@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useDialog } from "../providers/dialog/DialogProvider";
 import { DialogSearchList } from "../menus/DialogSearchList";
 
-import type { Mode } from "@nightcode/database";
+import type { ModeType } from "@nightcode/shared";
 import { AVAILABLE_MODES } from "../../constants/modes";
 import { getModeLabel } from "../../lib/utils";
 import type { AgentsDialogProps } from "./types";
@@ -14,7 +14,7 @@ export const AgentsDialogContent = ({
   const dialog = useDialog();
 
   const handleSelect = useCallback(
-    (nextMode: Mode) => {
+    (nextMode: ModeType) => {
       onSelectMode(nextMode);
       dialog.close();
     },

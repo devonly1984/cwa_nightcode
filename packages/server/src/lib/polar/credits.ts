@@ -1,18 +1,7 @@
 import {SUPPORTED_CHAT_MODELS,findSupportedChatModel,type ModelPricing} from '@nightcode/shared'
 import type { LanguageModelUsage } from 'ai'
 
-type CalculatedCreditsForUsageParams = { 
-    provider:string;
-    model:string;
-    usage: LanguageModelUsage;
-}
-type BillableUsage ={
-    credits: number;
-}
-type TokenCounts = {
-    inputTokens:number;
-    outputTokens: number;
-}
+
 
 const TOKENS_PER_MILLION = 1_000_000;
 

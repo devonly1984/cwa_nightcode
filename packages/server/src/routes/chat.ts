@@ -1,148 +1,120 @@
 import { Hono } from "hono";
 import { prisma } from "@nightcode/database/client";
-import { MessageStatus } from "@nightcode/database/enums";
-import { submitValidator } from "../schemas/chatSchema";
-import {
-  activeResumeSessionIds,
-  buildConversationHistory,
-  getResumableUserMessage,
-  streamAiResponse,
-} from "../lib/chatLib";
-import { streamSSE } from "hono/streaming";
-import { type ChatStreamEvent } from "@nightcode/shared";
-import { isSupportedChatModel } from "../lib/models";
+import { submitValidator } from "../lib/chat/schemas/submitSchema";
+import { resolveChatModel } from "../lib/models";
 import type { AuthenticatedEnv } from "../middleware/requireAuth";
 import { requiredCreditsBalance } from '../middleware/requireCeditsBalance'
+import { getToolContracts } from "@nightcode/shared";
+import type { NightcodeUIMessage } from "../lib/chat/types";
+import { convertToModelMessages, streamText, validateUIMessages, type LanguageModelUsage } from "ai";
+import { buildSystemPrompt } from "../prompts/SystemPrompt";
+import { hasPendingToolCalls } from "../lib/chat/chatLib";
+import type { Prisma } from "@nightcode/database";
+import { calculateCreditsForUsage } from "../lib/polar/credits";
+import { ingestAiUsage } from "../lib/polar/polar";
 
 
 
 
 const app = new Hono<AuthenticatedEnv>()
-  .post("/:sessionId/resume", async (c) => {
-    const sessionId = c.req.param("sessionId");
-    const userId = c.get("userId")
+  .post('/',requiredCreditsBalance,submitValidator,async(c)=>{
+    const userId = c.get("userId");
+    const { id, messages, mode, model } = c.req.valid('json')
     const session = await prisma.session.findUnique({
-      where: { id: sessionId, userId },
-      include: { messages: { orderBy: { createdAt: "asc" } } },
-    });
+      where: { id: userId }
+    })
     if (!session) {
-      return c.json({ error: "Session not found" }, 404);
+      return c.json({ error: "Session not found" }, 404)
     }
-    const resumeableMessage = getResumableUserMessage(session.messages);
-    if (!resumeableMessage) {
-      return c.json(
-        { error: "Session has not pending user message to resume" },
-        409,
-      );
+    const startTime = Date.now();
+    const tools = getToolContracts(mode);
+    const resolvedModel = resolveChatModel(model);
+    const previousMessages = Array.isArray(session.messages) ? (session.messages as unknown as NightcodeUIMessage[]) : []
+    const mergedMessages = [...previousMessages];
+    for (const message of messages) {
+      const incomingMessage = {
+        ...message,
+        metadata: {...message.metadata,mode,model}
+      } satisfies NightcodeUIMessage
+      const existingMessageIndex = mergedMessages.findIndex(m => m.id === incomingMessage.id);
+      if (existingMessageIndex===-1) {
+        mergedMessages.push(incomingMessage)
+      } else {
+        mergedMessages[existingMessageIndex]=incomingMessage
+      }
+
     }
-    if (!isSupportedChatModel(resumeableMessage.model)) {
-      return c.json(
-        {
-          error: `Session uses unsupported model: ${resumeableMessage.model}`,
-        },
-        409,
-      );
-    }
-    if (activeResumeSessionIds.has(sessionId)) {
-      return c.json(
-        { error: "Session already has an active resume" },
-        409,
-      );
-    }
-    activeResumeSessionIds.add(sessionId);
-    const history = buildConversationHistory(session.messages);
-    const abortController = new AbortController();
-    try {
-      return streamSSE(
-        c,
-        async (stream) => {
-          stream.onAbort(() => {
-            abortController.abort();
-          });
-          try {
-            await streamAiResponse(stream, {
-              sessionId,
-              userId,
-              model: resumeableMessage.model,
-              cwd: session.cwd,
-              history,
-              mode: resumeableMessage.mode,
-              abortController,
-            });
-          } finally {
-            activeResumeSessionIds.delete(sessionId);
+    const nextMessages = await validateUIMessages<NightcodeUIMessage>({
+      messages: mergedMessages,
+      tools
+    })
+    const modelMessages = await convertToModelMessages(nextMessages, { tools })
+    let completedUsage:LanguageModelUsage|null=null;
+    const result = streamText({
+      model: resolvedModel.model,
+      system: buildSystemPrompt({mode}),
+      messages: modelMessages,
+      tools,
+      providerOptions: resolvedModel.providerOptions,
+      onFinish(event){
+        completedUsage = event.usage;
+
+      }
+    })
+    return result.toUIMessageStreamResponse<NightcodeUIMessage>({
+      originalMessages: nextMessages,
+      messageMetadata({part}) {
+        if (part.type==='start') {
+          return {mode,model}
+        }
+        if (part.type === 'finish') { return undefined }
+        return {
+          mode,
+          model,
+          durationMs: Date.now() - startTime, ...(completedUsage ? { usage: completedUsage } : {})
+
+        }
+      },
+      async onFinish(event){
+        if (event.isAborted) return;
+        if (hasPendingToolCalls(event.responseMessage)) return;
+        await prisma.session.update({
+          where:{id:userId},
+          data: {
+            messages: event.messages as unknown as Prisma.InputJsonValue,
           }
-        },
-        async (err, stream) => {
-          activeResumeSessionIds.delete(sessionId);
-          const message = err instanceof Error ? err.message : String(err);
-          const errorEvent: ChatStreamEvent = { type: "error", message };
-          await stream.writeSSE({
-            event: "error",
-            data: JSON.stringify(errorEvent),
-          });
-        },
-      );
-    } catch (error) {
-      activeResumeSessionIds.delete(sessionId);
-      throw error;
-    }
+        })
+        if (!completedUsage) return;
+        try {
+          const billableUsage = calculateCreditsForUsage({
+            provider: resolvedModel.provider,
+            model: resolvedModel.modelId,
+            usage: completedUsage
+          })
+          await ingestAiUsage({
+            externalCustomerId: userId,
+            eventId: `chat-message:${event.responseMessage.id}`,
+            credits: billableUsage.credits
+          })
+        } catch (error) {
+          console.error("Failed to ingest Polar AI Usage for chat message",{
+            error,
+            sessionId:id,
+            messageId:event.responseMessage.id,
+            userId
+          })
+          
+        }
+      
+
+      },
+      onError(error) {
+        return error instanceof Error ?error.message:String(error)
+      }
+
+
+    })
+
   })
-  .post("/:sessionId", requiredCreditsBalance, submitValidator, async (c) => {
-    const sessionId = c.req.param("sessionId");
-    const userId = c.get("userId")
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId, userId },
-      include: { messages: { orderBy: { createdAt: "asc" } } },
-    });
-    if (!session) {
-      return c.json({ error: "Session not found" }, 404);
-    }
-    const data = c.req.valid("json");
-    await prisma.message.create({
-      data: {
-        sessionId,
-        role: "USER",
-        status: MessageStatus.COMPLETE,
-        model: data.model,
-        content: data.content,
-        mode: data.mode,
-      },
-    });
-    const history = buildConversationHistory([
-      ...session.messages,
-      {
-        role: "USER" as const,
-        content: data.content,
-        status: MessageStatus.COMPLETE,
-      },
-    ]);
-    const abortController = new AbortController();
-    return streamSSE(
-      c,
-      async (stream) => {
-        stream.onAbort(() => {
-          abortController.abort();
-        });
-        await streamAiResponse(stream, {
-          sessionId,
-          userId,
-          model: data.model,
-          cwd: session.cwd,
-          history,
-          mode: data.mode,
-          abortController,
-        });
-      },
-      async (err, stream) => {
-        const message = err instanceof Error ? err.message : String(err);
-        const errorEvent: ChatStreamEvent = { type: "error", message };
-        await stream.writeSSE({
-          event: "error",
-          data: JSON.stringify(errorEvent),
-        });
-      },
-    );
-  });
 
 export default app;

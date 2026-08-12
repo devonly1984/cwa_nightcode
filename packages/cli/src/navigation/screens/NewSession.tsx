@@ -35,13 +35,6 @@ const NewSession = () => {
         const res = await apiClient.sessions.$post({
           json: {
             title: state.message.slice(0, 100),
-            cwd: process.cwd(),
-            initialMessage: {
-              role: "USER",
-              content: state.message,
-              mode: state.mode,
-              model: state.model,
-            },
           },
         });
 
@@ -52,7 +45,7 @@ const NewSession = () => {
         const session = await res.json();
         navigate(`/sessions/${session.id}`, {
           replace: true,
-          state: { session },
+          state: { session,initialPrompt:state },
         });
       } catch (error) {
         if (ignore) return;

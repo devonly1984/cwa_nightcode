@@ -4,7 +4,7 @@ import { useKeyboard } from "@opentui/react";
 import { getFilteredCommands } from "../lib/utils";
 import type { Command } from "../types";
 import { useKeyboardLayer } from "../components/providers/keyboard/KeyboardProvider";
-interface UseCommandMenuReturn {
+type UseCommandMenuReturn = {
   showCommandMenu: boolean;
   commandQuery: string;
   selectedIndex: number;

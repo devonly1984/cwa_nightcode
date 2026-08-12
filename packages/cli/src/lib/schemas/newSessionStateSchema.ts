@@ -1,8 +1,8 @@
-import { Mode } from '@nightcode/database';
+import { Mode,modeSchema } from '@nightcode/shared';
 import {z} from 'zod';
 
 export const newSessionStateSchema = z.object({
     message: z.string(),
-    mode: z.enum(Mode),
+    mode: modeSchema,
     model: z.string()
 })

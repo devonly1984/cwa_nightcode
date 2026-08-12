@@ -25,7 +25,7 @@ import { useDialog } from "../providers/dialog/DialogProvider";
 import { useTheme } from "../providers/theme/ThemeProvider";
 import { useNavigate } from "react-router";
 import { usePromptConfig } from "../providers/prompt-config/PromptConfigProvider";
-import { Mode } from "@nightcode/database/enums";
+import { Mode } from "@nightcode/shared";
 import type {
   MentionCandidate,
   MentionMatch,

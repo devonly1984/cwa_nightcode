@@ -1,9 +1,9 @@
 import { useTheme } from "../providers/theme/ThemeProvider";
 import { EmptyBorder } from "../../constants/border";
-import { Mode } from "@nightcode/database";
+import { Mode, type ModeType } from "@nightcode/shared";
 interface Props {
   message: string;
-  mode: Mode;
+  mode: ModeType;
 }
 const UserMessage = ({ message,mode }: Props) => {
   const { colors } = useTheme();

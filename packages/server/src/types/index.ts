@@ -1,7 +1,7 @@
 import type { SupportedChatModel, SupportedChatModelId, SupportProvider } from "@nightcode/shared";
 import type { LanguageModel } from "ai";
 import type { ProviderOptions } from '@ai-sdk/provider-utils'
-import type { anthropic } from "@ai-sdk/anthropic";
+
 import type { Mode } from "@nightcode/database";
 
 export type AnthropicModelId = Extract<SupportedChatModel, { provider: "anthropic" }>["id"]

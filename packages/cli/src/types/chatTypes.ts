@@ -1,47 +1,25 @@
-import type { Mode } from "@nightcode/database/enums";
+import type { ModeType } from "@nightcode/shared";
 import type { SupportedChatModelId } from "@nightcode/shared";
 import type { ClientResponse } from "hono/client";
+import type { Message } from '../types'
 
 
-export type ClientToolCallPart = {
-    type: "tool-call",
-    id:string;
-    name:string;
-    args: Record<string,unknown>;
-    result?:string;
-    status: "calling" | "done"
-}
-export type ClientMessagePart = | { type: 'reasoning', text: string } | ClientToolCallPart | { type: 'text', text: string }
-export type Message =
-  | {
-      id: string;
-      role: "user";
-      content: string;
-      mode: Mode;
-      model: SupportedChatModelId;
-    }
-  | {
-      id: string;
-      role: "assistant";
-      content: string;
-      mode: Mode;
-      model: SupportedChatModelId;
-      parts: ClientMessagePart[];
-        duration?: string;
-        interrupted?: boolean;
-    } | { id: string, role: "error", content: string }
+
+export type ClientMessagePart = Message['parts'][number];
+export type ClientToolCallPart = Extract<ClientMessagePart, { type: `tool-${string}` | "dyanmic-tool" }>
+
 export type StreamingState = {
     status:"idle"
 }|{
     status:"streaming",
     parts:ClientMessagePart[];
-    mode:Mode;
+    mode:ModeType;
     model:SupportedChatModelId
 }
 export type ActiveStream ={
     requestId:string;
     controller: AbortController;
-    mode:Mode;
+    mode:ModeType;
     model:SupportedChatModelId;
     parts: ClientMessagePart[]
     interruptedCaptured: boolean;
@@ -49,16 +27,16 @@ export type ActiveStream ={
 
 export type SubmitParams = {
     userText:string;
-    mode:Mode;
+    mode:ModeType;
     model: SupportedChatModelId
 }
 export type RunStreamParams ={
-    mode:Mode;
+    mode:ModeType;
     model:SupportedChatModelId;
     request: (controller: AbortController) => Promise<ClientResponse<unknown>>
 }
 export type PartGroup = {
-    type: ClientMessagePart['type'];
+    type: ClientMessagePart["type"];
     parts: ClientMessagePart[];
     key: string;
 }

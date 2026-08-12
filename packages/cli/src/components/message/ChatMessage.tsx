@@ -1,32 +1,32 @@
-import type { SessionData } from "../../types"
 import BotMessage from "./BotMessage";
-import ErrorMessage from "./ErrorMessage";
 import UserMessage from "./UserMessage";
-import prettyMs from 'pretty-ms';
-import {
-  DEFAULT_CHAT_MODEL_ID,
-  type SupportedChatModelId,
-} from "@nightcode/shared";
-import { useChat } from "../../hooks/useChat";
-import type { Message, ClientMessagePart } from "../../types/chatTypes";
+import type { Message } from "../../types";
+
 interface ChatMessageProps {
   msg: Message;
 }
+
 const ChatMessage = ({ msg }: ChatMessageProps) => {
+  const text = msg.parts
+    .filter((p) => p.type === "text")
+    .map((p) => p.text)
+    .join("");
     if (msg.role==="user") {
-        return <UserMessage message={msg.content} mode={msg.mode} />;
+        return (
+          <UserMessage
+            message={text}
+            mode={msg.metadata?.mode ?? "BUILD"}
+          />
+        );
     } 
-    if (msg.role === "error") {
-      return <ErrorMessage message={msg.content} />;
-    }
+   
 return (
   <BotMessage
     parts={msg.parts}
-    model={msg.model}
-    mode={msg.mode}
-    duration={msg.duration}
+    model={msg.metadata?.model ?? "unknown"}
+    mode={msg.metadata?.mode ?? "BUILD"}
+    durationMs={msg.metadata?.durationMs}
     streaming={false}
-    interrupted={msg.interrupted}
   />
 );
 };
